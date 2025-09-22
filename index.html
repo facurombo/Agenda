@@ -1,0 +1,355 @@
+﻿<!doctype html>
+<html lang="es">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Agenda | Calendario, Semanal y Finanzas</title>
+      <link rel="stylesheet" href="styles.css" />
+      <link rel="icon" href="img/logo.png" type="image/png" />
+    </head>
+    <body>
+    <!-- Pantalla de ingreso / creación de usuario -->
+    <div id="login-screen" class="login-screen hidden" aria-hidden="true">
+      <div class="login-card">
+        <h2>Ingresar</h2>
+        <form id="login-form" class="stack">
+          <label>Usuario
+            <input type="text" id="login-username" placeholder="Usuario" required />
+          </label>
+          <label>Contraseña
+            <input type="password" id="login-password" placeholder="Contraseña" />
+          </label>
+          <small style="color:var(--muted)">Si el usuario no existe, se creará automáticamente.</small>
+          <button type="submit">Continuar</button>
+        </form>
+      </div>
+    </div>
+    <header class="app-header">
+      <img src="img/logo.png" alt="Logo de la agenda" class="logo" />
+      <h1>Mi Agenda</h1>
+      <div class="user-box">
+        <button id="user-btn" class="ghost" title="Cambiar usuario"></button>
+      </div>
+      <nav class="tabs">
+        <button class="tab-btn active" data-view="mes">Mes</button>
+        <button class="tab-btn" data-view="semana">Agenda Semanal</button>
+        <button class="tab-btn" data-view="finanzas">Finanzas</button>
+        <button class="tab-btn" data-view="objetivos">Objetivos</button>
+      </nav>
+    </header>
+
+    <main class="container">
+      <!-- Vista: Mes entero -->
+      <section id="view-mes" class="view active">
+        <div class="panel">
+          <div class="panel-header">
+            <button id="prev-month" title="Mes anterior">⟨</button>
+            <h2 id="month-label"></h2>
+            <button id="next-month" title="Mes siguiente">⟩</button>
+            <button id="today-month" class="ghost">Hoy</button>
+            <button id="toggle-hidden" class="ghost" title="Abrir panel oculto"></button>
+          </div>
+          <div class="calendar">
+            <div class="weekdays">
+              <span>Lun</span><span>Mar</span><span>Mie</span><span>Jue</span><span>Vie</span><span>Sab</span><span>Dom</span>
+            </div>
+            <div id="calendar-grid" class="grid"></div>
+          </div>
+
+          <!-- Agregar evento (debajo del calendario) -->
+          <form id="event-form" class="stack" style="margin-top:12px">
+            <div class="row">
+              <input type="date" id="event-date" required />
+              <input type="time" id="event-time" />
+              <input type="time" id="event-end-time" placeholder="Fin (opcional)" />
+              <select id="event-priority">
+                <option value="baja">Baja</option>
+                <option value="media">Media</option>
+                <option value="alta">Alta</option>
+              </select>
+            </div>
+            <input type="text" id="event-text" placeholder="Nuevo evento" required />
+            <div class="row">
+              <label style="display:flex; align-items:center; gap:6px">
+                <input type="checkbox" id="event-recur" /> Repetir
+              </label>
+              <input type="number" id="event-recur-days" min="2" placeholder="cada X días" style="width:120px" />
+              <label style="display:flex; align-items:center; gap:6px">
+                <input type="checkbox" id="event-recur-weekly" /> Semanal (mismo día)
+              </label>
+              <input type="number" id="event-recur-times" min="1" placeholder="veces (opcional)" style="width:140px" />
+              <input type="date" id="event-recur-until" placeholder="hasta (opcional)" />
+            </div>
+            <button type="submit">Agregar</button>
+          </form>
+        </div>
+        <div class="panel side">
+          <h3 id="selected-date-label">Eventos</h3>
+          <ul id="events-list" class="list"></ul>
+        </div>
+
+        <!-- Panel oculto: Etapas de plantas -->
+        <div id="plants-panel" class="panel full hidden" aria-hidden="true">
+          <div class="panel-header">
+            <h3 style="margin-right:auto"> Etapas</h3>
+            <small style="color: var(--muted);"></small>
+          </div>
+          <form id="plant-form" class="row" style="margin-top:8px">
+            <input type="text" id="plant-name" placeholder="Nombre" />
+            <select id="plant-type" required>
+              <option value="esquejacion">Esquejacion</option>
+              <option value="vegetacion">Vegetacion</option>
+              <option value="floracion">Floracion</option>
+            </select>
+            <input type="date" id="plant-start" required />
+            <input type="number" id="plant-limit-days" min="1" placeholder="Límite (días, opcional)" />
+            <input type="color" id="plant-color" value="#86efac" title="Color de la etapa" />
+            <button type="submit">Agregar etapa</button>
+          </form>
+          <ul id="plant-list" class="list" style="margin-top:10px"></ul>
+        </div>
+      </section>
+
+      <!-- Vista: Agenda semanal -->
+      <section id="view-semana" class="view">
+        <div class="panel">
+          <div class="panel-header">
+            <button id="prev-week" title="Semana anterior">⟨</button>
+            <h2 id="week-label"></h2>
+            <button id="next-week" title="Semana siguiente">⟩</button>
+            <button id="this-week" class="ghost">Esta semana</button>
+          </div>
+          <div id="week-alerts" class="week-alerts"></div>
+          <div id="week-grid" class="week-grid"></div>
+          <form id="week-event-form" class="row">
+            <select id="week-event-priority">
+              <option value="baja">Baja</option>
+              <option value="media">Media</option>
+              <option value="alta">Alta</option>
+            </select>
+            <input type="date" id="week-event-date" required />
+            <input type="time" id="week-event-time" />
+            <input type="time" id="week-event-end" placeholder="Fin (opcional)" />
+            <input type="text" id="week-event-text" placeholder="Nuevo evento" required />
+            <label style="display:flex; align-items:center; gap:6px">
+              <input type="checkbox" id="week-event-recur" /> Repetir
+            </label>
+            <input type="number" id="week-event-recur-days" min="2" placeholder="cada X días" style="width:120px" />
+            <label style="display:flex; align-items:center; gap:6px">
+              <input type="checkbox" id="week-event-recur-weekly" /> Semanal (mismo día)
+            </label>
+            <input type="number" id="week-event-recur-times" min="1" placeholder="veces (opcional)" style="width:140px" />
+            <input type="date" id="week-event-recur-until" placeholder="hasta (opcional)" />
+            <button type="submit">Agregar</button>
+          </form>
+
+          <h3 style="margin:10px 0 6px;font-size:14px;color:var(--muted)">Agregar clase (semanal)</h3>
+          <form id="class-form" class="row">
+            <input type="text" id="class-subject" placeholder="Materia" required />
+            <select id="class-day" required>
+              <option value="1">Lunes</option>
+              <option value="2">Martes</option>
+              <option value="3">Miércoles</option>
+              <option value="4">Jueves</option>
+              <option value="5">Viernes</option>
+              <option value="6">Sábado</option>
+              <option value="0">Domingo</option>
+            </select>
+            <input type="date" id="class-start-date" required />
+            <input type="date" id="class-end-date" required />
+            <input type="time" id="class-start" required />
+            <input type="time" id="class-end" required />
+            <input type="number" id="class-total" min="1" placeholder="Clases totales (auto)" style="width:160px" readonly />
+            <input type="color" id="class-color" value="#60a5fa" />
+            <button type="submit">Agregar</button>
+          </form>
+
+          <h3 style="margin:12px 0 6px;font-size:14px;color:var(--muted)">Parciales / Trabajos</h3>
+          <form id="task-form" class="row">
+            <select id="task-type">
+              <option value="parcial">Parcial</option>
+              <option value="tp">TP</option>
+            </select>
+            <input type="text" id="task-title" placeholder="Nombre" required />
+            <input type="date" id="task-date" required />
+            <button type="submit">Agregar</button>
+          </form>
+          <ul id="task-list" class="list" style="margin-top:8px"></ul>
+
+          <h3 style="margin:12px 0 6px;font-size:14px;color:var(--muted)">Clases guardadas</h3>
+          <ul id="class-list" class="list" style="margin-top:4px"></ul>
+        </div>
+      </section>
+
+      <!-- Vista: Objetivos personales -->
+      <section id="view-objetivos" class="view">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Objetivos</h2>
+          </div>
+
+          <form id="goal-form" class="row" style="margin-bottom:8px">
+            <input type="text" id="goal-title" placeholder="Nuevo objetivo" required />
+            <input type="text" id="goal-category" placeholder="Categoria (opcional)" style="width:160px" />
+            <select id="goal-priority" style="width:140px">
+              <option value="baja">Prioridad: baja</option>
+              <option value="media">Prioridad: media</option>
+              <option value="alta">Prioridad: alta</option>
+            </select>
+            <input type="date" id="goal-due" />
+            <button type="submit">Agregar</button>
+          </form>
+
+          <ul id="goals-list" class="list" style="margin-top:6px"></ul>
+        </div>
+
+        <div class="panel side">
+          <h3 style="margin:0 0 6px">Ideas y ayuda</h3>
+          <div class="alert">Usa objetivos SMART: Específico, Medible, Alcanzable, Relevante, con Tiempo.</div>
+          <div class="alert">Siguiente acción: definí el próximo paso concreto y pequeño.</div>
+          <div class="alert">Bloques de tiempo: reservá 25–50 min para avanzar sin interrupciones.</div>
+          <textarea id="goal-ideas" placeholder="Anota ideas, motivaciones, obstáculos…" style="width:100%; min-height:120px; margin-top:6px"></textarea>
+          <div id="goals-stats" class="summary" style="margin-top:8px"></div>
+        </div>
+      </section>
+
+      <!-- Vista: Finanzas personales -->
+      <section id="view-finanzas" class="view">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Finanzas personales</h2>
+            <div class="row">
+              <input type="month" id="fin-month" />
+              <button id="fin-today" class="ghost">Mes actual</button>
+            </div>
+          </div>
+
+            <table class="table" id="fin-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Categoria</th>
+                <th>Descripcion</th>
+                <th class="num">Monto</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+          <form id="fin-form" class="grid-form">
+            <select id="fin-type" required>
+              <option value="ingreso">Ingreso</option>
+              <option value="gasto">Gasto</option>
+            </select>
+            <input type="date" id="fin-date" required />
+            <select id="fin-category" required></select>
+            <input type="text" id="fin-desc" placeholder="Descripcion" />
+            <input type="number" id="fin-amount" step="1" min="0" placeholder="Monto" required />
+            <button type="submit">Agregar</button>
+          </form>
+
+          <div class="summary">
+            <div><strong>Ingresos:</strong> <span id="sum-ingresos">$0</span></div>
+            <div><strong>Gastos:</strong> <span id="sum-gastos">$0</span></div>
+            <div><strong>Balance:</strong> <span id="sum-balance">$0</span></div>
+          </div>
+
+          <h3 style="margin:8px 0 6px; font-size:14px; color:var(--muted)">Ingresos del mes</h3>
+          <ul id="fin-income-list" class="list" style="margin-top:4px"></ul>
+
+        
+
+  
+
+          <hr style="margin:16px 0; border:0; border-top:1px solid var(--border)" />
+
+          <h2 style="margin:6px 0 8px">Vencimientos</h2>
+          <form id="bill-form" class="row">
+            <input type="text" id="bill-name" placeholder="Tipo / Categoria (ej: Luz)" required />
+            <input type="date" id="bill-date" required />
+            <input type="number" id="bill-amount" placeholder="Monto" step="1" min="0" required />
+            <label style="display:flex; align-items:center; gap:6px"><input type="checkbox" id="bill-monthly" checked /> Mensual</label>
+            <button type="submit">Agregar</button>
+          </form>
+          <div class="mini-cal">
+            <div class="mc-header">
+              <button id="bill-prev" class="ghost">◀</button>
+              <h3 id="bill-month-label" style="margin:0"></h3>
+              <button id="bill-next" class="ghost">▶</button>
+            </div>
+            <div class="weekdays">
+              <span>Lun</span><span>Mar</span><span>Mie</span><span>Jue</span><span>Vie</span><span>Sab</span><span>Dom</span>
+            </div>
+            <div id="bill-grid" class="mc-grid"></div>
+          </div>
+          <div id="bill-totals" class="summary" style="margin-top:8px"></div>
+          <div id="bill-upcoming" class="week-alerts" style="margin-top:8px"></div>
+
+          <hr style="margin:16px 0; border:0; border-top:1px solid var(--border)" />
+
+          
+          <div class="row">
+            
+          </div>
+
+          <div class="table-wrap">
+
+            
+            <table class="table" id="yearly-table"></table>
+            <label style="display:flex; align-items:center; gap:6px">Año
+              <input type="number" id="yearly-year" style="width:110px" />
+            </label>
+          </div>
+
+          <h3 style="margin:12px 0 6px; font-size:14px; color:var(--muted)">Evolución de gastos (reales)</h3>
+          <div id="fin-chart" class="chart"></div>
+          <h3 style="margin:12px 0 6px; font-size:14px; color:var(--muted)">Gastos por categoria (anual)</h3>
+          <div id="fin-pie" class="chart"></div>
+
+          <hr style="margin:16px 0; border:0; border-top:1px solid var(--border)" />
+
+          <h2 style="margin:6px 0 8px">Ingresos futuros</h2>
+          <form id="future-income-form" class="row">
+            <input type="date" id="fi-date" required />
+            <input type="text" id="fi-text" placeholder="Descripción" required />
+            <input type="number" id="fi-amount" step="1" min="0" placeholder="Monto" required />
+            <input type="number" id="fi-prob" step="1" min="0" max="100" placeholder="Prob% (opc.)" style="width:120px" />
+            <button type="submit">Agregar</button>
+          </form>
+          <ul id="fi-list" class="list" style="margin-top:8px"></ul>
+          <div id="future-summary" class="summary" style="margin-top:12px">
+            <div><strong>Ingresos futuros:</strong> <span id="future-income-total">$0</span></div>
+            <div><strong>Gastos futuros:</strong> <span id="future-expense-total">$0</span></div>
+            <div><strong>Balance futuro:</strong> <span id="future-balance-total">$0</span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <small>Datos guardados localmente en tu navegador.</small>
+    </footer>
+
+    <!-- Modal genérico -->
+    <div id="modal" class="modal hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-close="1"></div>
+      <div class="modal-card">
+        <button type="button" id="modal-close-x" class="modal-x" title="Cerrar">×</button>
+        <h3 id="modal-title">Editar</h3>
+        <form id="modal-form" class="stack">
+          <div id="modal-fields"></div>
+          <div class="modal-actions">
+            <button type="button" id="modal-cancel" class="ghost">Cancelar</button>
+            <button type="submit" id="modal-accept">Aceptar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+  </html>
+
+
